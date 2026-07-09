@@ -46,7 +46,7 @@ export interface Reminder {
 
 export interface ChatMessage {
   id: string;
-  senderRole: 'profissional' | 'paciente' | 'cuidador';
+  senderRole: 'profissional' | 'paciente' | 'cuidador' | 'administrador';
   senderName: string;
   text: string;
   timestamp: string;

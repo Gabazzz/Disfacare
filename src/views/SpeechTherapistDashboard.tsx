@@ -124,7 +124,7 @@ export const SpeechTherapistDashboard: React.FC<SpeechTherapistDashboardProps> =
                           onSelectPatient(targetPt);
                         }
                       }}
-                      className="!py-1.5 !px-3 !h-9 text-xs !bg-red-50 hover:!bg-critical text-critical hover:text-white border border-red-200"
+                      className="!py-1.5 !px-3 !h-9 text-xs !bg-[#DC2626] hover:!bg-[#B91C1C] !text-white font-bold transition-all shadow-sm rounded-btn border-none"
                     >
                       Verificar
                     </Button>

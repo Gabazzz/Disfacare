@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Activity, Users, ShieldAlert, Award, FileText, CheckCircle2, Stethoscope, Heart, UserRound, X } from 'lucide-react';
+import { ArrowRight, Activity, Users, ShieldAlert, Award, FileText, CheckCircle2, Stethoscope, Heart, UserRound, X, ArrowLeft, Lock } from 'lucide-react';
 import Button from '../components/Button';
 
 interface LandingPageProps {
-  onEnterApp: (role: 'profissional' | 'paciente' | 'cuidador') => void;
+  onEnterApp: (role: 'profissional' | 'paciente' | 'cuidador' | 'administrador') => void;
 }
 
 /* ─────────────────────────────────────────
@@ -12,19 +12,26 @@ interface LandingPageProps {
 interface RoleModalProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (role: 'profissional' | 'paciente' | 'cuidador') => void;
+  onSelect: (role: 'profissional' | 'paciente' | 'cuidador' | 'administrador') => void;
 }
 
 const RoleModal: React.FC<RoleModalProps> = ({ open, onClose, onSelect }) => {
   const [visible, setVisible] = useState(false);
   const [hoveredRole, setHoveredRole] = useState<string | null>(null);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminUser, setAdminUser] = useState('');
+  const [adminPass, setAdminPass] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
     if (open) {
-      // Small delay for mount animation
       requestAnimationFrame(() => setVisible(true));
     } else {
       setVisible(false);
+      setShowAdminLogin(false);
+      setAdminUser('');
+      setAdminPass('');
+      setLoginError('');
     }
   }, [open]);
 
@@ -36,7 +43,8 @@ const RoleModal: React.FC<RoleModalProps> = ({ open, onClose, onSelect }) => {
       label: 'Fonoaudiólogo',
       description: 'Gerencie pacientes, prescreva protocolos e receba alertas clínicos.',
       icon: Stethoscope,
-      gradient: 'from-[#1B4F72] to-[#2E86AB]',
+      tailwindGradient: 'from-[#1B4F72] to-[#2E86AB]',
+      cssGradient: 'linear-gradient(135deg, #1B4F72, #2E86AB)',
       badge: 'Profissional',
       badgeBg: 'bg-blue-100 text-[#1B4F72]',
     },
@@ -45,7 +53,8 @@ const RoleModal: React.FC<RoleModalProps> = ({ open, onClose, onSelect }) => {
       label: 'Paciente',
       description: 'Acompanhe sua reabilitação, exercícios e evolução de deglutição.',
       icon: Heart,
-      gradient: 'from-[#5DCAA5] to-[#2E86AB]',
+      tailwindGradient: 'from-[#5DCAA5] to-[#2E86AB]',
+      cssGradient: 'linear-gradient(135deg, #5DCAA5, #2E86AB)',
       badge: 'Paciente',
       badgeBg: 'bg-emerald-100 text-emerald-700',
     },
@@ -54,11 +63,32 @@ const RoleModal: React.FC<RoleModalProps> = ({ open, onClose, onSelect }) => {
       label: 'Cuidador',
       description: 'Registre refeições, monitore sintomas e comunique-se com a equipe.',
       icon: UserRound,
-      gradient: 'from-[#D97706] to-[#F59E0B]',
+      tailwindGradient: 'from-[#D97706] to-[#F59E0B]',
+      cssGradient: 'linear-gradient(135deg, #D97706, #F59E0B)',
       badge: 'Cuidador',
       badgeBg: 'bg-amber-100 text-amber-700',
     },
+    {
+      id: 'administrador' as const,
+      label: 'Administrador',
+      description: 'Gerencie clínicas, usuários, logs e permissões globais.',
+      icon: ShieldAlert,
+      tailwindGradient: 'from-gray-700 to-gray-900',
+      cssGradient: 'linear-gradient(135deg, #4B5563, #1F2937)',
+      badge: 'Admin',
+      badgeBg: 'bg-gray-150 text-gray-700',
+    },
   ];
+
+  const handleAdminSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminUser.trim() && adminPass.trim()) {
+      // Allow simulated log in for simplicity
+      onSelect('administrador');
+    } else {
+      setLoginError('Por favor, preencha o usuário e a senha.');
+    }
+  };
 
   return (
     <div
@@ -90,94 +120,156 @@ const RoleModal: React.FC<RoleModalProps> = ({ open, onClose, onSelect }) => {
         <button
           onClick={onClose}
           id="modal-close-btn"
-          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
+          className="absolute top-5 right-5 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200 cursor-pointer"
         >
           <X className="w-4 h-4 text-gray-500" />
         </button>
 
-        {/* Header */}
-        <div className="flex flex-col gap-1 pr-8">
-          <h2 className="text-2xl font-extrabold text-[#1B4F72] tracking-tight">Como você deseja entrar?</h2>
-          <p className="text-sm text-gray-500">Selecione o perfil correspondente ao seu acesso.</p>
-        </div>
+        {!showAdminLogin ? (
+          <>
+            {/* Header */}
+            <div className="flex flex-col gap-1 pr-8">
+              <h2 className="text-2xl font-extrabold text-[#1B4F72] tracking-tight">Como você deseja entrar?</h2>
+              <p className="text-sm text-gray-500">Selecione o perfil correspondente ao seu acesso.</p>
+            </div>
 
-        {/* Role Cards */}
-        <div className="flex flex-col gap-3">
-          {roles.map((role, i) => {
-            const IconComp = role.icon;
-            const isHovered = hoveredRole === role.id;
-            return (
-              <button
-                key={role.id}
-                id={`role-btn-${role.id}`}
-                onClick={() => onSelect(role.id)}
-                onMouseEnter={() => setHoveredRole(role.id)}
-                onMouseLeave={() => setHoveredRole(null)}
-                className="flex items-center gap-4 p-4 rounded-2xl border-2 text-left w-full group"
-                style={{
-                  borderColor: isHovered ? 'transparent' : '#F0F2F5',
-                  background: isHovered
-                    ? `linear-gradient(135deg, var(--tw-gradient-from, #1B4F72), var(--tw-gradient-to, #2E86AB))`
-                    : 'white',
-                  backgroundImage: isHovered
-                    ? `linear-gradient(135deg, ${role.gradient.replace('from-', '').replace('to-', '')})`
-                    : 'none',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  opacity: 0,
-                  animation: `fadeSlideUp 0.45s cubic-bezier(0.4,0,0.2,1) ${i * 80}ms forwards`,
-                }}
-              >
-                {/* Icon */}
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${role.gradient}`}
-                  style={{
-                    transform: isHovered ? 'scale(1.08)' : 'scale(1)',
-                    transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
-                  }}
-                >
-                  <IconComp className="w-6 h-6 text-white" />
-                </div>
-
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span
-                      className="font-extrabold text-base"
-                      style={{ color: isHovered ? 'white' : '#1B2A3B' }}
-                    >
-                      {role.label}
-                    </span>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isHovered ? 'bg-white/20 text-white' : role.badgeBg}`}
-                      style={{ transition: 'all 0.3s ease' }}
-                    >
-                      {role.badge}
-                    </span>
-                  </div>
-                  <p
-                    className="text-xs leading-relaxed"
+            {/* Role Cards */}
+            <div className="flex flex-col gap-3">
+              {roles.map((role, i) => {
+                const IconComp = role.icon;
+                const isHovered = hoveredRole === role.id;
+                return (
+                  <button
+                    key={role.id}
+                    id={`role-btn-${role.id}`}
+                    onClick={() => {
+                      if (role.id === 'administrador') {
+                        setShowAdminLogin(true);
+                      } else {
+                        onSelect(role.id);
+                      }
+                    }}
+                    onMouseEnter={() => setHoveredRole(role.id)}
+                    onMouseLeave={() => setHoveredRole(null)}
+                    className="flex items-center gap-4 p-4 rounded-2xl border-2 text-left w-full group cursor-pointer"
                     style={{
-                      color: isHovered ? 'rgba(255,255,255,0.8)' : '#6B7280',
-                      transition: 'color 0.3s ease',
+                      borderColor: isHovered ? 'transparent' : '#F0F2F5',
+                      background: isHovered ? role.cssGradient : 'white',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      opacity: 0,
+                      animation: `fadeSlideUp 0.45s cubic-bezier(0.4,0,0.2,1) ${i * 80}ms forwards`,
                     }}
                   >
-                    {role.description}
-                  </p>
-                </div>
+                    {/* Icon */}
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${role.tailwindGradient}`}
+                      style={{
+                        transform: isHovered ? 'scale(1.08)' : 'scale(1)',
+                        transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+                      }}
+                    >
+                      <IconComp className="w-6 h-6 text-white" />
+                    </div>
 
-                {/* Arrow */}
-                <ArrowRight
-                  className="w-4 h-4 shrink-0"
-                  style={{
-                    color: isHovered ? 'white' : '#D1D5DB',
-                    transform: isHovered ? 'translateX(2px)' : 'translateX(0)',
-                    transition: 'all 0.3s ease',
-                  }}
-                />
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span
+                          className="font-extrabold text-base"
+                          style={{ color: isHovered ? 'white' : '#1B2A3B' }}
+                        >
+                          {role.label}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isHovered ? 'bg-white/20 text-white' : role.badgeBg}`}
+                          style={{ transition: 'all 0.3s ease' }}
+                        >
+                          {role.badge}
+                        </span>
+                      </div>
+                      <p
+                        className="text-xs leading-relaxed"
+                        style={{
+                          color: isHovered ? 'rgba(255,255,255,0.8)' : '#6B7280',
+                          transition: 'color 0.3s ease',
+                        }}
+                      >
+                        {role.description}
+                      </p>
+                    </div>
+
+                    {/* Arrow */}
+                    <ArrowRight
+                      className="w-4 h-4 shrink-0"
+                      style={{
+                        color: isHovered ? 'white' : '#D1D5DB',
+                        transform: isHovered ? 'translateX(2px)' : 'translateX(0)',
+                        transition: 'all 0.3s ease',
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <form onSubmit={handleAdminSubmit} className="flex flex-col gap-5">
+            {/* Header */}
+            <div className="flex items-center gap-2 pr-8">
+              <button
+                type="button"
+                onClick={() => setShowAdminLogin(false)}
+                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                title="Voltar"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-500" />
               </button>
-            );
-          })}
-        </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-[#1B4F72] tracking-tight">Login Administrativo</h2>
+                <p className="text-xs text-gray-500">Informe suas credenciais para gerenciar a plataforma.</p>
+              </div>
+            </div>
+
+            {loginError && (
+              <div className="text-xs text-critical bg-red-50 p-2.5 rounded-btn font-semibold border border-red-100 text-center">
+                {loginError}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3.5">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">Usuário</label>
+                <input
+                  type="text"
+                  placeholder="admin"
+                  value={adminUser}
+                  onChange={(e) => setAdminUser(e.target.value)}
+                  className="w-full text-xs p-3 rounded-btn border border-gray-250 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 font-semibold"
+                  required
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">Senha</label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={adminPass}
+                    onChange={(e) => setAdminPass(e.target.value)}
+                    className="w-full text-xs p-3 rounded-btn border border-gray-250 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 font-semibold pr-10"
+                    required
+                  />
+                  <Lock className="w-4 h-4 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                </div>
+              </div>
+            </div>
+
+            <Button type="submit" variant="primary" className="w-full !h-11 !py-3 text-xs mt-2">
+              Entrar como Administrador
+            </Button>
+          </form>
+        )}
       </div>
 
       <style>{`
@@ -232,7 +324,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
   };
 
   const handleEnter = () => setShowModal(true);
-  const handleSelect = (role: 'profissional' | 'paciente' | 'cuidador') => {
+  const handleSelect = (role: 'profissional' | 'paciente' | 'cuidador' | 'administrador') => {
     setShowModal(false);
     onEnterApp(role);
   };
@@ -240,6 +332,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
   return (
     <>
       <RoleModal open={showModal} onClose={() => setShowModal(false)} onSelect={handleSelect} />
+
 
       <div className="bg-appBg min-h-screen flex flex-col font-sans select-none overflow-x-hidden">
         {/* ── Header ── */}

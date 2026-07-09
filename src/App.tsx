@@ -17,6 +17,7 @@ import PatientDashboard from './views/PatientDashboard';
 import CaregiverDashboard from './views/CaregiverDashboard';
 import MedicalRecordView from './views/MedicalRecordView';
 import ChatView from './views/ChatView';
+import { AdminDashboard } from './views/AdminDashboard';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -42,7 +43,7 @@ import {
 
 function App() {
   // App States
-  const [role, setRole] = useState<'profissional' | 'paciente' | 'cuidador'>('profissional');
+  const [role, setRole] = useState<'profissional' | 'paciente' | 'cuidador' | 'administrador'>('profissional');
   const [activeTab, setActiveTab] = useState<string>('landing'); // 'landing' or dynamic tabs
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
@@ -69,7 +70,7 @@ function App() {
   });
 
   // When changing roles, assign corresponding default patients
-  const handleRoleChange = (newRole: 'profissional' | 'paciente' | 'cuidador') => {
+  const handleRoleChange = (newRole: 'profissional' | 'paciente' | 'cuidador' | 'administrador') => {
     setIsLoading(true);
     setRole(newRole);
     if (newRole === 'paciente') {
@@ -241,7 +242,8 @@ function App() {
     const senderNames = {
       profissional: 'Dra. Ana (Fonoaudióloga)',
       paciente: patients.find(p => p.id === selectedPatientId)?.name.split(' ')[0] + ' (Paciente)' || 'Paciente',
-      cuidador: 'Lúcia (Cuidadora)'
+      cuidador: 'Lúcia (Cuidadora)',
+      administrador: 'Administrador'
     };
 
     const newMsg: ChatMessage = {
@@ -289,7 +291,7 @@ function App() {
   const currentPatient = patients.find(p => p.id === selectedPatientId) || patients[0];
 
   // Dynamic Navigation Items based on active simulated profile
-  const navItemsByRole: Record<'profissional' | 'paciente' | 'cuidador', NavItem[]> = {
+  const navItemsByRole: Record<'profissional' | 'paciente' | 'cuidador' | 'administrador', NavItem[]> = {
     profissional: [
       { id: 'dashboard', label: 'Painel', icon: LayoutDashboard },
       { id: 'prontuario', label: 'Prontuários', icon: FileText },
@@ -306,7 +308,12 @@ function App() {
       { id: 'dashboard', label: 'Refeições', icon: Clipboard },
       { id: 'prontuario', label: 'Prontuário', icon: FileText },
       { id: 'chat', label: 'Chat Apoio', icon: MessageSquare },
-    ]
+    ],
+    administrador: [
+      { id: 'dashboard', label: 'Sistema', icon: LayoutDashboard },
+      { id: 'prontuario', label: 'Usuários', icon: Users },
+      { id: 'chat', label: 'Logs & Auditoria', icon: ShieldAlert },
+    ],
   };
 
   const activeNavItems = navItemsByRole[role];
@@ -316,7 +323,7 @@ function App() {
     return (
       <LandingPage 
         onEnterApp={(selectedRole) => {
-          handleRoleChange(selectedRole);
+          handleRoleChange(selectedRole as 'profissional' | 'paciente' | 'cuidador' | 'administrador');
           handleTabChange('dashboard');
         }} 
       />
@@ -354,9 +361,12 @@ function App() {
           <div className="flex items-center gap-3">
             {/* Quick role preview chip for testing on mobile */}
             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-              role === 'profissional' ? 'bg-primary-main/10 text-primary-main' : role === 'paciente' ? 'bg-health/10 text-health' : 'bg-amber-100 text-amber-600'
+              role === 'profissional' ? 'bg-primary-main/10 text-primary-main'
+              : role === 'paciente' ? 'bg-health/10 text-health'
+              : role === 'administrador' ? 'bg-gray-200 text-gray-700'
+              : 'bg-amber-100 text-amber-600'
             }`}>
-              {role === 'profissional' ? 'Fono' : role === 'paciente' ? 'Paciente' : 'Cuidador'}
+              {role === 'profissional' ? 'Fono' : role === 'paciente' ? 'Paciente' : role === 'administrador' ? 'Admin' : 'Cuidador'}
             </span>
             
             <button
@@ -375,7 +385,7 @@ function App() {
             <button 
               className="w-11 h-11 bg-primary-main text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all"
               onClick={() => {
-                const rolesArray: ('profissional' | 'paciente' | 'cuidador')[] = ['profissional', 'paciente', 'cuidador'];
+                const rolesArray: ('profissional' | 'paciente' | 'cuidador' | 'administrador')[] = ['profissional', 'paciente', 'cuidador', 'administrador'];
                 const nextIdx = (rolesArray.indexOf(role) + 1) % rolesArray.length;
                 handleRoleChange(rolesArray[nextIdx]);
               }}
@@ -416,6 +426,11 @@ function App() {
             </div>
           ) : (
             <>
+              {/* Admin Dashboard */}
+              {activeTab === 'dashboard' && role === 'administrador' && (
+                <AdminDashboard />
+              )}
+
               {/* Render dynamic screens based on active tab and role */}
               {activeTab === 'dashboard' && role === 'profissional' && (
                 <SpeechTherapistDashboard

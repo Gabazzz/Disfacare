@@ -12,7 +12,7 @@ interface ChatViewProps {
   onAddReminder: (label: string, time: string, type: 'diet' | 'exercise' | 'medication' | 'hydration') => void;
   onDeleteReminder: (reminderId: string) => void;
   onToggleReminder: (reminderId: string) => void;
-  currentRole: 'profissional' | 'paciente' | 'cuidador';
+  currentRole: 'profissional' | 'paciente' | 'cuidador' | 'administrador';
 }
 
 export const ChatView: React.FC<ChatViewProps> = ({
@@ -53,7 +53,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const roleLabels = {
     profissional: { label: 'Dra. Ana (Fonoaudióloga)', style: 'bg-primary/10 text-primary' },
     paciente: { label: 'João (Paciente)', style: 'bg-secondary/10 text-secondary' },
-    cuidador: { label: 'Lúcia (Cuidadora)', style: 'bg-warning/10 text-warning' }
+    cuidador: { label: 'Lúcia (Cuidadora)', style: 'bg-warning/10 text-warning' },
+    administrador: { label: 'Administrador', style: 'bg-gray-200 text-gray-700' }
   };
 
   return (
